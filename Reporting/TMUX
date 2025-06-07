@@ -1,0 +1,41 @@
+- [ ] TMUX session started (`tmux new -s [session_name]`)
+- [ ] Logging started inside the session (`prefix + Shift-P` or `tmux capture-pane -pS -32768 > output.txt`)
+- [ ] Session properly named per host/subdomain (`tmux rename-session [new_name]`)
+- [ ] Major actions and commands being logged
+- [ ] Splits/panes organized logically (optional)
+- [ ] Start new session (`tmux new -s [name]`)
+- [ ] List sessions (`tmux ls`)
+- [ ] Attach to session (`tmux attach -t [name]`)
+- [ ] Rename session (`tmux rename-session -t [old-name] [new-name]`)
+- [ ] Detach session (`Ctrl-b d`)
+- [ ] Vertical split (`Ctrl-b %`)
+- [ ] Horizontal split (`Ctrl-b "`)
+- [ ] Move between panes (`Ctrl-b` + arrow key)
+- [ ] Close a pane (`Ctrl-b x`)
+- [ ] Start/stop logging (`prefix + Shift-P`)
+- [ ] Manual capture output (`tmux capture-pane -pS -32768 > [filename].txt`)
+
+
+## 🛠 Quick TMUX Commands Refresher:
+
+-  Start new session: `tmux new -s [name]`
+    
+-  List sessions: `tmux ls`
+    
+-  Attach to session: `tmux attach -t [name]`
+    
+-  Rename session: `tmux rename-session -t [old-name] [new-name]`
+    
+-  Detach session: `Ctrl-b d`
+    
+-  Vertical split: `Ctrl-b %`
+    
+-  Horizontal split: `Ctrl-b "`
+    
+-  Move between panes: `Ctrl-b` + arrow key
+    
+-  Close a pane: `Ctrl-b x`
+    
+-  Start/stop logging (with plugin): `prefix + Shift-P`
+    
+-  Manual capture output: `tmux capture-pane -pS -32768 > [filename].txt`
