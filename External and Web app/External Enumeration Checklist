@@ -1,0 +1,121 @@
+🌐 External Enumeration Checklist
+
+- [ ] Run `nmap -sV -sC -Pn -p- --min-rate=1000 -n <target_ip> -oN <target_ip>_fullscan.txt`
+- [ ] Review open ports and service versions
+- [ ] Identify web services (80, 443, 8080, 8443, etc.)
+- [ ] Run `ffuf -u http://<IP>/ -H "Host: FUZZ.<domain>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt
+- [ ] Save Subdomains to /etc/hosts 
+- [ ] Run Ffuf enum checklist 
+- [ ] Run `whatweb -a 3 http://<host>` and save output
+- [ ] Run `nikto -h http://<host> -Tuning x -Display V -o <host>_nikto.txt`
+- [ ] Run `ffuf -u http://<host>/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -mc all -fc 403 -fs 0 -t 40 -ac`
+- [ ] Run extension-based FFUF: `-e .php,.bak,.zip,.tar,.gz,.conf,.txt,.xml` using `raft-small-words.txt`
+- [ ] If login found, brute with `hydra -l admin -P /usr/share/seclists/Passwords/darkweb2017-top100.txt http-post-form "/login.php:username=^USER^&password=^PASS^:Invalid Credentials"`
+- [ ] Enumerate virtual hosts (vhosts) with FFUF: `ffuf -u http://<ip> -H "Host: FUZZ.target.local" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -mc 200,403 -ac`
+- [ ] Check for wildcard DNS or 302 issues (use `-mc all -ac`)
+- [ ] Manually visit found subdomains / vhosts
+- [ ] Run `whatweb` + `nikto` on each discovered subdomain
+- [ ] Check `robots.txt`, `sitemap.xml`, `crossdomain.xml` manually or via FFUF
+- [ ] Explore each web page and directory manually — check login pages, forms, comments, JS files
+- [ ] Grep JS files and HTML for endpoints: `grep -Eo 'https?://[^"]+|/[a-zA-Z0-9/_-]+\.php'`
+- [ ] Try common creds on dev-looking login panels: `admin:admin`, `test:test`, etc.
+- [ ] Log all pages found (200/403) and note potential XSS, IDOR, upload forms, etc.
+- [ ] Create sub-note for each subdomain in Obsidian and copy this checklist into it
+
+
+1. **FFUF Details**
+
+## ⚡ Parameter & Value Fuzzing (Hidden Gems)
+
+-  **ffuf GET param fuzzing**:
+    
+    `ffuf -u http://<target>/page.php?FUZZ=value -w /usr/share/wordlists/SecLists/Discovery/Web-Content/burp-parameter-names.txt -fs 4242`
+    
+-  **ffuf POST param fuzzing**:
+
+    
+    `ffuf -X POST -d "FUZZ=value" -u http://<target>/submit.php -w /usr/share/wordlists/SecLists/Discovery/Web-Content/burp-parameter-names.txt -fs 4242`
+    
+-  **Burp Intruder / Turbo Intruder**: → Use parameter brute on login forms, auth workflows, debug interfaces.
+
+
+   - [ ] FFUF basic web fuzzing (common.txt) 
+- [ ] FFUF extension fuzzing (.php, .bak, .zip, etc.)
+- [ ] FFUF vhost fuzzing (subdomain discovery via Host header)
+- [ ] FFUF parameter fuzzing (bonus: if time, fuzz parameters if login forms appear)
+
+2. **Wildcard DNS Handling**
+   - [ ] Confirm wildcard DNS manually by resolving fake subdomain (e.g., fake123.target.com)
+- [ ] If wildcard found, adjust FFUF fuzzing with -fs (filter size) or -fc (filter code) options
+
+
+3. **Capture Screenshots of Webapps Early**
+   - [ ] (Optional) Run gowitness/eyewitness on open web ports for visual recon
+
+
+## ⚡ Banner Grabbing & Manual Fingerprinting
+
+-  **netcat banner grab**:
+    
+    `nc <ip> <port>`
+    
+    → Manual connection to banner-exposing services (FTP, SMTP, HTTP, POP3, IMAP).
+    
+-  **telnet banner grab**:
+    
+    `telnet <ip> <port>`
+    
+    → Older but occasionally useful to talk to plain TCP services.
+    
+-  **openssl s_client (SSL/TLS Services)**:
+    
+    `openssl s_client -connect <ip>:443`
+    
+    → Grab SSL/TLS cert info, verify hostnames, and detect custom setups.
+    
+-  **nmap version scan**:
+    
+    `nmap -sV <target>`
+    
+    → Pull versions, CPEs, and sometimes hidden banner signatures.
+    
+-  **Version Inference Tip**: → Compare small differences (header leaks, error messages) against known apps (e.g., Apache, nginx, OpenSSH versions).  
+    Even if banners are masked, behavior sometimes hints at version.
+    
+
+---
+
+## ⚡ Smart TCP/UDP Strategy
+
+-  **Top 1000 TCP Ports (Initial sweep)**:
+    
+    `nmap -T4 --top-ports 1000 <target>`
+    
+-  **Top 1000 UDP Ports (optional if TCP weak)**:
+    
+    `sudo nmap -sU --top-ports 1000 <target>`
+    
+    → Focus on SNMP (UDP 161/162), TFTP (69), DNS (53), and weird broadcast-based services.
+    
+-  **Full TCP or UDP sweep (only when valuable)**:
+    
+    `nmap -p- -T3 <target>  sudo nmap -sU -p- <target>`
+    
+    → Only if initial top-port scans aren't giving footholds.
+    
+
+---
+
+## ⚡ Targeted NSE Scripts via Nmap
+
+-  **SMB enumeration script**:
+
+    `nmap --script smb-enum-shares.nse -p 445 <target>`
+    
+-  **LDAP search script**:
+    
+    `nmap --script ldap-search -p 389 <target>`
+    
+-  **SNMP information leak**:
+    
+    `nmap --script snmp-info -p 161 <target>`
