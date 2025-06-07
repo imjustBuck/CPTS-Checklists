@@ -1,0 +1,79 @@
+ 🧼 RDP Pillaging Checklist (Non-Admin Access)
+
+- [ ] `C:\Users\<user>\Downloads` checked
+- [ ] `C:\Users\<user>\Desktop` checked
+- [ ] `C:\Users\<user>\AppData\Local` and `Roaming` browsed
+- [ ] `C:\Program Files\` Checked 
+- [ ] `C:\Program Files (x86)\` Checked
+- [ ] Run `wmic product get name`
+- [ ] Outlook or mail clients searched
+- [ ] `.rdp`, `.ovpn`, `.kdbx`, `.config`, `.ps1` files searched
+- [ ] Run `tasklist /v`
+- [ ] Installed software analyzed (searchsploit/EDB)
+- [ ] Credentials or tokens saved to vault
+- [ ] Host IPs or services documented for BloodHound pivoting
+- [ ]  Review running processes for exposed tokens (e.g., RDP sessions, scheduled tasks)
+- [ ] Check registry for stored RDP creds: `reg query "HKCU\Software\Microsoft\Terminal Server Client\Servers"`
+
+
+# 🛠️ App Found? Immediate Response Flow
+
+### 1️⃣ App Looks Credential-Related (RDP/SSH/WinSCP/VPN Client)?
+
+-  Check for saved sessions or cleartext creds.
+    
+    - Example for WinSCP: Look in `AppData` or use SessionGopher
+        
+    - Example for RDP: Check reg query `"HKCU\Software\Microsoft\Terminal Server Client\Servers"`
+        
+-  If session data exists → try lateral movement or new pivot point.
+    
+
+---
+
+### 2️⃣ App Looks Like Admin Tool / Server Management / Outdated Software?
+
+-  Check for **known exploits**:
+    
+    - Use `searchsploit "<AppName>"`
+        
+    - Google: `<AppName> version x.x.x exploit site:exploit-db.com`
+        
+-  Focus on:
+    
+    - **Privilege Escalation** (local SYSTEM shell)
+        
+    - **Remote Command Execution** (if service-based)
+        
+
+---
+
+### 3️⃣ App Looks Weird / Internal / Unknown?
+
+-  Check installation directory:
+    
+    - Open `Program Files\Vendor\AppName`
+        
+    - Look for `.xml`, `.ini`, `.config`, `.db`, `.ps1` files
+        
+-  Check:
+    
+    - Hardcoded creds
+        
+    - Database connection strings
+        
+    - API keys
+        
+
+---
+
+# 🔥 TLDR:
+
+**App = Potential Shortcut.**  
+Either:
+
+- 🤝 Give you creds
+    
+- 🧨 Let you PrivEsc
+    
+- 🌉 Open a new pivot path
