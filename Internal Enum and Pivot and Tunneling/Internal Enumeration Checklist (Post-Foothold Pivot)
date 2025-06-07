@@ -1,0 +1,80 @@
+🔧 Initial Context & Network Awareness
+
+- [ ] Run `ip a` or `ifconfig` to identify internal IP address
+- [ ] Run `ip route` or `route -n` to identify default gateway and routes
+- [ ] Run `hostname -I` or `hostname` for box name
+- [ ] Run `wmic product get name` for installed products and service versions
+- [ ] Run `cat /etc/hosts` to identify other local references
+- [ ] Run `cat /etc/resolv.conf` to identify internal DNS servers
+- [ ] Run `netstat -tunlp` or `ss -tulnp` to see open/listening services
+
+## 🌐 Internal Network Scanning (via pivot)
+
+- [ ] Run `ping -c1 172.16.x.1` to test for other ranges
+- [ ] Use `nmap -sS -T4 -Pn -p- <target>` for port sweep
+- [ ] Use `nmap -sV -sC -T4 <target>` for service/version detection
+- [ ] Use `smbclient -L <target>` or `crackmapexec smb <target>` for shares
+- [ ] Use proxychains or `ligolo-ng` if pivoting required:
+  - [ ] Validate with: `proxychains curl http://<internal>`
+  - [ ] Or run `nmap -sT -Pn -n -T4 -iL IL_hosts` through SOCKS tunnel
+  - [ ] Run `for i in {1..254};do (ping -c 1 172.16.X.$i | grep "bytes from" &);done`
+  - [ ] Run `foreach ($i in 1..254) {ping -n 1 -w 1 172.16.5.$i | findstr "TTL="}` 
+  - [ ] Run `1..254 | ForEach-Object {Test-Connection -ComputerName ("172.16.5." + $_) -Count 1 -Quiet} `
+  - [ ] 
+
+
+✅ **Output only live IPs during sweep:**
+``` Powershell 
+1..254 | ForEach-Object {
+    if (Test-Connection -ComputerName ("172.16.210." + $_) -Count 1 -Quiet) {
+        Write-Output "172.16.210.$_ is alive"
+    }
+}
+
+```
+
+
+
+🧠 After nmap -p- scan (proxychains or local):
+- Use curl, smbclient, ftp, ssh, nc, ldapsearch to manually grab banners.
+- Small -sC -p22,80,445 rescan if light scripts work through proxy.
+- Prioritize known ports: SMB = 445, RDP = 3389, HTTP = 80/443, etc.
+- Accept that full -sV won’t happen cleanly; improvise banner grabbing.
+
+✅ Step 1: **First sweep: Find open ports**
+
+- Run normal `nmap -sT -Pn -p-` via proxychains or local nmap on host.
+    
+
+✅ Step 2: **After ports are found, manually enumerate services**  
+For common services:
+
+- **HTTP/HTTPS** → `curl -I http://target:port`, `whatweb`, `nikto`
+    
+- **SMB (445)** → `smbclient -L //target/`, `rpcclient`, `enum4linux`
+    
+- **RDP (3389)** → `xfreerdp /v:target`
+    
+- **SSH (22)** → `ssh target` → see banner if possible
+    
+- **FTP (21)** → `ftp target` → manual banner grab
+    
+- **LDAP (389/636)** → `ldapsearch`
+    
+- **SMTP (25)** → `nc target 25`, then VRFY/EXPN
+    
+
+✅ Step 3: **If possible, use lighter banner scripts manually**
+
+- `nmap -sV --version-light` sometimes works better (less invasive)
+    
+- `nmap -sC -p22,80,445 target` (small focused scans after port discovery)
+    
+
+✅ Step 4: **Prioritize targets manually**
+
+- If you see port 445 open, assume SMB.
+    
+- If 3389 open, assume RDP.
+    
+- If 80/443 open, assume web.
