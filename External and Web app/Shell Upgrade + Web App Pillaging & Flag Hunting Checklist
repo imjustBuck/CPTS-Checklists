@@ -1,0 +1,56 @@
+🐚 Shell Stabilization & Upgrade
+
+- [ ] Use `python3 -c 'import pty; pty.spawn("/bin/bash")'` to stabilize shell
+- [ ] Press `Ctrl-Z`, then run:
+  - [ ] `stty raw -echo; fg`
+  - [ ] `reset` (if needed)
+  - [ ] `export TERM=xterm`
+- [ ] Use `script /dev/null -c bash` for cleaner shell (optional)
+- [ ] Check if `bash`, `sh`, or `zsh` is available for a better shell
+- [ ] Try `socat` or `rlwrap` if available for terminal wrapping
+- [ ] Upgrade to full TTY if possible using:
+  - [ ] `python3 -c 'import pty; pty.spawn("/bin/bash")'`
+  - [ ] `echo os.system('/bin/bash')`
+  - [ ] `/bin/bash -i`
+- [ ] Spawn second reverse shell if shell is unstable
+
+## 🏴 Flag Hunting
+
+- [ ] Check web root for flags (`/var/www/html/`, `/srv/http/`, etc.)
+- [ ] Search common locations:
+  - [ ] `/home/*/`
+  - [ ] `/opt/`
+  - [ ] `/root/` (if root)
+  - [ ] `/var/www/`
+  - [ ] `/tmp/`
+- [ ] Run `find / -name flag*.txt 2>/dev/null`
+- [ ] Look for juicy names: `flag.txt`, `.flag`, `proof.txt`, etc.
+- [ ] Search inside code/configs with:
+  - [ ] `grep -Ri 'flag' /var/www/ 2>/dev/null`
+  - [ ] `grep -Ri 'HTB{' / 2>/dev/null`
+
+## 🪓 Pillaging Web Apps (www-data / low-priv)
+
+- [ ] Check `/var/www/html` and subdirectories for:
+  - [ ] `config.php`, `.env`, `wp-config.php`, `settings.py`, `web.config`
+  - [ ] API keys, DB creds, tokens, hardcoded passwords
+- [ ] Look for readable `.git/`, `.svn/`, `.htaccess`, `.htpasswd` files
+- [ ] Check `/etc/passwd` and `/etc/shadow` for users/hashes (if readable)
+- [ ] Run `find / -type f -name "*.bak" 2>/dev/null` (config/backup files)
+- [ ] Run `find / -type f -name "*.log" 2>/dev/null` (passwords in logs)
+- [ ] Check for plaintext passwords with:
+  - [ ] `grep -iR 'password' /var/www/ 2>/dev/null`
+  - [ ] `grep -iR 'secret' /var/www/ 2>/dev/null`
+- [ ] Read local `.bash_history`, `.mysql_history`, `.psql_history`, etc.
+- [ ] Check cronjobs with `crontab -l` and `/etc/crontab`
+- [ ] Review `/proc/net/tcp` and `ss -tulnp` for open services
+- [ ] Check if SSH private keys exist in `/home/*/.ssh/id_rsa`
+
+## 🧪 Optional Checks (if web shell isn’t root)
+
+- [ ] Is `sudo` allowed for this user? (`sudo -l`)
+- [ ] Can we run anything as another user?
+- [ ] Run `uname -a` and `cat /etc/os-release` for kernel info
+- [ ] Look for SUID binaries: `find / -perm -4000 -type f 2>/dev/null`
+- [ ] Run `ps aux` and `netstat -tulnp` for context
+- [ ] Dump creds from databases if any are exposed (MySQL, MongoDB, etc.)
