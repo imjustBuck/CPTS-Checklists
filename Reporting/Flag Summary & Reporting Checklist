@@ -1,0 +1,13 @@
+- [ ]  ✅ Flag ID noted (e.g., HTB{...})
+- [ ] 🧠 Flag type identified (Initial Access, Web Exploit, Priv Esc, Pivot, etc.)
+- [ ] 💻 Hostname or IP where flag was captured
+- [ ] 📍 Service or vector exploited to access flag (e.g., `/upload.php`, `smbclient`, `XXE`, `bloodhound`, etc.)
+- [ ] 🧰 Tools used (Burp Suite, ffuf, LinPEAS, mimikatz, etc.)
+- [ ] 📜 Exact steps taken to obtain the flag
+- [ ] 🔑 Credentials used (if any)
+- [ ] 📂 File/Location the flag was found in
+- [ ] 🧩 Related user/session context (e.g., www-data shell, ttimmons@domain.local)
+- [ ] 🔄 Was this part of a chain? (e.g., used creds from this to pivot or escalate?)
+- [ ] 📌 Any enumeration or pre-exploitation hints that led to it
+- [ ] 🧪 Can this be reproduced? (Clean and reliable exploit path?)
+- [ ] 📓 Flag summary written for report
