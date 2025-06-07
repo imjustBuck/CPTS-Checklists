@@ -1,0 +1,47 @@
+🧑‍💻 Basic AD Context
+
+- [ ] `whoami /groups` — list group memberships
+- [ ] `nltest /domain_trusts` — enumerate trust relationships
+- [ ] `Get-ADDomain` — get domain info
+- [ ] `Get-ADForest` — see forest/domain structure
+
+## 🔍 Users & Groups
+
+- [ ] `Get-ADUser -Filter * | Select Name,UserPrincipalName` — list users
+- [ ] `net group "Domain Admins" /domain` — list DAs
+- [ ] `net user <username> /domain` — see details of interesting users
+- [ ] `Get-ADGroupMember -Identity "Domain Admins"`
+
+## 🔐 Credential Hunting & AS-REP
+
+- [ ] `Get-ADUser -Filter {DoesNotRequirePreAuth -eq $true}` — AS-REP roastable
+- [ ] Export those users for `GetNPUsers.py`
+
+## 🔥 SPNs / Kerberoast
+
+- [ ] `Get-ADUser -Filter {ServicePrincipalName -like "*"} -Properties ServicePrincipalName`
+- [ ] Export for `GetUserSPNs.py`
+
+## 🪪 Object Permissions (ACL Hunting)
+
+- [ ] `Get-ACL -Path "AD:\CN=user,CN=Users,DC=domain,DC=local"` — check if you have write perms
+- [ ] `Get-ADObject -LDAPFilter "(objectclass=*)" -SearchBase "OU=target,DC=domain,DC=local"` — enumerate OUs
+
+## 🖥️ Host Mapping
+
+- [ ] `Get-ADComputer -Filter * | Select Name,OperatingSystem` — map hosts
+- [ ] `net view /domain` — see available shares/machines
+- [ ] `Test-Connection -ComputerName <target> -Count 1` — live check
+- [ ] Check \\domaincontroller\SYSVOL\ for Group Policy loot
+
+
+## 🎯 Trust Edge Cases
+
+- [ ] `Get-ADTrust` — list domain trusts
+- [ ] `Get-ADObject -LDAPFilter "(msDS-AllowedToDelegateTo=*)"` — find delegation configs
+
+## 📤 If You Own a Machine
+
+- [ ] Check RDP sessions: `qwinsta`
+- [ ] Check WinRM: `Test-WSMan <target>`
+- [ ] `dir \\<target>\C$\Users` — enumerate profiles remotely
