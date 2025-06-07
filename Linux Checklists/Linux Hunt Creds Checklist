@@ -1,0 +1,42 @@
+Linux Credential Hunting - Quick Pillage
+
+
+### 🔥 Bash / Zsh History
+- [ ] Run `cat ~/.bash_history`
+- [ ] Run `cat ~/.zsh_history`
+➡️ Look for typoed passwords, MySQL logins, curl scripts
+### 🔥 SSH Keys and Known Hosts
+- [ ] Run `cat ~/.ssh/id_rsa` 
+- [ ] Run `cat ~/.ssh/known_hosts` 
+- [ ] Run `ls ~/.ssh/`
+➡️ Find keys for pivoting
+
+### 🔥 Config Files for Secrets 
+- [ ] Run `grep -i password /etc/* -R` 
+- [ ] Run `grep -i password /var/www/* -R`
+➡️ Catch secrets in server configs, websites, backups
+
+### 🔥 Web App Source Code 
+- [ ] Run `find /var/www/ -type f \( -iname "*.php" -o -iname "*.config" -o -iname "*.env" \)`
+- [ ] Run `grep -Ri "password" /var/www/`
+➡️ API keys, DB creds, SMTP creds
+
+### 🔥 Hidden Flag Files / Scripts 
+ - [ ] Run `find /home/ -name "*.txt"`
+ - [ ] Run `find /opt/ -type f`
+ - [ ] Run `find /tmp/ -type f`
+➡️ Users leave debug files, notes, backups
+
+
+## ⚡ Flow When You Find a Password
+
+| Find               | Action                                 |
+| ------------------ | -------------------------------------- |
+| NTLM hash          | Crack it immediately or spray with CME |
+| Password string    | Try RDP, SMB, WinRM immediately        |
+| SSH Key            | Pivot SSH into other boxes             |
+| Database creds     | Try MySQL/MSSQL pivot and xp_cmdshell  |
+| Browser creds      | Pivot web apps, internal portals       |
+| Wi-Fi key          | Try new wireless pivot                 |
+| Sticky Notes/Notes | Decode plaintext secrets               |
+| .kdbx (KeePass)    | Hash dump → crack with hashcat         |
