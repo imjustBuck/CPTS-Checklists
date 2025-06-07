@@ -1,0 +1,99 @@
+**Confirming if a Host is Domain-Joined (Quickly):**
+
+## 🎯 The Fastest Way Using CrackMapExec:
+
+`proxychains crackmapexec smb <target_ip> -u <user> -p <pass>`
+
+or (unauthenticated version):
+
+`proxychains crackmapexec smb <target_ip>`
+
+---
+
+# 🛡️ **What You Look For in CrackMapExec Output:**
+
+When you hit a host with CrackMapExec (CME),  
+look for **this kind of line in the output:**
+
+`SMB 10.129.19.25 445 ECHOHEALTH [*] Windows 10 Pro 19045 x64 (name:DESKTOP-12345) (domain:ECHOHEALTH) (signing:True) (SMBv1:False)`
+
+➔ **See that "domain:ECHOHEALTH"?**  
+✅ That means it’s **domain joined** to the `ECHOHEALTH` domain.
+
+---
+
+# 🛡️ **If It’s NOT Domain Joined You’ll See:**
+
+- domain:WORKGROUP
+    
+- domain:LOCAL
+    
+- or missing domain info altogether
+    
+
+**Example (local-only machine):**
+
+`SMB 10.129.22.55 445 WORKGROUP [*] Windows 10 Home 19045 x64 (name:DESKTOP-LOCAL) (domain:WORKGROUP) (signing:True) (SMBv1:False)`
+
+➔ **If it says `WORKGROUP` — not a domain-joined system.**  
+➔ You would NOT be able to SharpHound from there usefully.
+
+---
+
+# 🛡️ **Bonus Validation (Double Check):**
+
+If you want to double-validate without touching CME again:
+
+- **Login shell:**  
+    If you land a shell (like Evil-WinRM), you can run:
+    
+    `systeminfo | findstr /i "Domain"`
+    
+    ➔ Will show you domain membership like:
+    
+    `Domain: ECHOHEALTH Logon Server: \\ECHO-DC-01`
+
+
+# ONCE THIS IS VALIDATED RUN SHARPHOUND ASAP!!! 
+## 🚀 Setup & Execution
+
+- [ ] Upload `SharpHound.exe` or `SharpHound.ps1` to domain-joined machine
+- [ ] Run as any domain user:
+  - [ ] `.\SharpHound.exe -c All` or `Invoke-BloodHound -CollectionMethod All`
+- [ ] Zip file collected (ensure it's complete)
+- [ ] Transfer .zip to attack box (via SMB, RDP, scp, etc.)
+- [ ] Import into BloodHound GUI or `bloodhound-python` CLI
+
+## 🔎 Core Queries to Run
+
+- [ ] "Shortest Paths to Domain Admins"
+- [ ] "Find All Domain Admins"
+- [ ] "Shortest Path from Owned User to High Value Target"
+- [ ] "Find Users with DCSync Rights"
+- [ ] "List Users with GenericWrite on Another User"
+- [ ] "List Computers where Domain Users have Local Admin Access"
+- [ ] "Shortest Paths to Kerberoastable Users"
+
+## 🧠 Indicators for Attack Paths
+
+- [ ] GenericWrite / GenericAll permissions on users/groups
+- [ ] ForceChangePassword abuse
+- [ ] RBCD misconfigurations (Resource-Based Constrained Delegation)
+- [ ] Unconstrained Delegation machines
+- [ ] Kerberoastable users (check if password is crackable)
+- [ ] AS-REP roastable users
+- [ ] AdminTo / CanRDP / CanPSRemote edges on key targets
+- [ ] Group nesting abuse (low-priv user in a chain to Domain Admin)
+
+## 🛠️ Tools to Chain With
+
+- [ ] `GetUserSPNs.py` (Kerberoasting)
+- [ ] `GetNPUsers.py` (AS-REP Roasting)
+- [ ] `impacket-secretsdump.py` (DCSync or local hash dumping)
+- [ ] `evil-winrm`, `wmiexec.py`, `psexec.py`, or RDP for movement
+
+## ✅ Path Complete?
+
+- [ ] Flag captured from DC or key internal box
+- [ ] Domain dominance confirmed (NTDS.dit / Administrator hash)
+- [ ] Document chain in report (who → who → what)
