@@ -1,0 +1,47 @@
+Key Strategy:
+
+- **External enum first** → **Foothold** → **Internal enum** → **Privesc/Lateral** → **AD Domination** → **Flag tracking and cleanup.**
+    
+- **Always start tmux** when popping a shell. **ALWAYS.**
+    
+- **If brain fog hits?** Just literally ask yourself:  
+    🧠 “Where am I in the priority chain?”  
+    ✅ Match checklist to that phase.
+
+
+🥇 1. External Footprinting 
+- [ ] External Enumeration Checklist
+- [ ] Web App Exploitation & Testing (only if you find web apps early)
+
+
+🥈 2. Gaining Foothold (Once you find a vuln or login)
+- [ ] Shell Upgrade + Web App Pillaging & Flag Hunting Checklist
+- [ ] Service Enumeration Checklist (Enumerate all running services immediately)
+- [ ] TMUX Logging Checklist (start logging your session cleanly!)
+
+🥉 3. Internal Enumeration (After initial shell or user access)
+- [ ] Internal Enumeration Checklist (Post-Foothold Pivot)
+- [ ] Tool Transfer Methods Checklist (transfer what you need: LinPEAS, WinPEAS, BloodHound collectors)
+- [ ] Manual PowerShell AD Enumeration Checklist (if on Windows)
+
+🥏 4. Lateral Movement & Credential Reuse (if you find creds)
+- [ ] Lateral Movement & Credential Reuse Checklist
+- [ ] Port Forwarding Checklist (if you need to pivot to another box)
+
+🧩 5. Privilege Escalation Phase
+- [ ] Linux Privilege Escalation Checklist (if Linux box)
+- [ ] Windows Privilege Escalation Checklist (if Windows box)
+- [ ] RDP Pillaging Checklist (if RDP access gained after escalation)
+
+🔑 6. Credential Maxing & AD Hacking (Once you get stronger users)
+- [ ] Credential Hunting & Box Maxing Checklist
+- [ ] Active Directory Attack Checklist
+- [ ] BloodHound Attack Path Checklist
+
+🏁 7. Capture & Cleanup Phase (As you grab flags)
+- [ ] Flag Summary & Reporting Checklist (capture clean data)
+- [ ] Flag & Tool Cleanup Checklist (clean tools, loot, TMUX logs, screenshots)
+
+📝 8. Final Reporting Phase (Last 1-2 days)
+- [ ] Reporting Checklist
+- [ ] Final Exam Submission Checklist (optional final proofing)
