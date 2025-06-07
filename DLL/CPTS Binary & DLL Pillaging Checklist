@@ -1,0 +1,162 @@
+Green Flags for Binary/DLL Analysis (CPTS Focus)
+
+## ✅ 1. **Service or Scheduled Task points to it**
+
+- You find a **custom** or **weird-looking service** or **scheduled task** running an unknown `.exe` or `.dll`.
+    
+- Especially if the `binpath` has **spaces without quotes** (priv esc vuln).
+    
+
+→ _**Time to check it.**_
+
+---
+
+## ✅ 2. **It’s located in a writable path**
+
+- Example:
+    
+    - `C:\Program Files\` — **not writable** (safe)
+        
+    - `C:\Temp\weird_tool.exe` — **probably writable** (red flag!)
+        
+    - `C:\Users\Public\Documents\something.dll` — **hijack me please**
+        
+
+→ _**Writable = exploitation window.**_
+
+---
+
+## ✅ 3. **Filename suggests security, admin, or auth function**
+
+- Examples: `authService.exe`, `PasswordManager.dll`, `vpnconnector.exe`, `internalTools.exe`
+    
+- Stuff that **might touch creds**, login flows, or network configs.
+    
+
+→ _**If the name screams "auth" or "internal tool" — worth a fast look.**_
+
+---
+
+## ✅ 4. **Binary is running as SYSTEM, Administrator, or high-priv account**
+
+- Even if you don’t understand what it does yet — if it's running as SYSTEM, any **small hijack** or **exec abuse** = full box takeover.
+    
+
+→ _**Always worth checking SYSTEM-owned binaries.**_
+
+---
+
+## ✅ 5. **Binary is suspiciously large or small**
+
+- Normal executables are ~300KB to 5MB.
+    
+- If you see a tiny 12KB `vpnconn.exe` or a massive 800MB `.dll`, it's worth poking:
+    
+    - Tiny size = possibly a wrapper that calls another binary (DLL hijack chance)
+        
+    - Huge size = might be packed with hardcoded configs/secrets.
+        
+
+→ _**Size anomalies = investigate briefly.**_
+
+---
+
+# ❌ When **NOT** to Waste Time:
+
+|Situation|Skip It|
+|---|---|
+|Normal system32 binaries (`notepad.exe`, `calc.exe`)|✅|
+|Binaries with valid Authenticode signatures|✅|
+|Service binaries with proper quotes, non-writable folders|✅|
+|Random small DLLs for drivers, hardware utils|✅|
+|No writable folder, no creds inside, no obvious function|✅|
+
+---
+
+# 📜 If Any Green Flag → Run this 5-Command Binary Pillage:
+``` CMD
+strings suspicious.exe | less     # Look for creds/paths
+exiftool suspicious.exe           # Check metadata
+# If Windows:
+Get-Content suspicious.exe | Select-String -Pattern "pass","key","token"
+Get-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*" | Select-Object DisplayName, InstallLocation  # Installed apps if needed
+ls -Recurse | findstr ".exe .dll .config"   # Crawl for related files
+```
+
+
+
+## 🎯 When to Trigger This:
+
+- Found a suspicious `.exe`, `.dll`, `.config`, or `.bin` during post-exploitation.
+    
+- Found custom tools, scripts, or service binaries during enumeration.
+    
+- Service or scheduled task points to a weird binary path.
+    
+
+---
+
+## 📜 Rapid Manual Analysis Steps:
+
+-  **Run `strings` on it**:
+    
+    `strings filename.exe | less`
+    
+    > 🔎 Look for hardcoded passwords, API keys, IP addresses, usernames, creds.
+    
+-  **Check metadata with `exiftool`**:
+    
+    `exiftool filename.exe`
+    
+    > 🔎 Might reveal internal usernames, machine names, or source paths.
+    
+-  **Check dependencies (DLL hijacking clues)**:
+    
+    `ldd filename.exe     # (Linux) if cross-compiled`
+    
+    or use `PE-bear`, `pestudio`, or `Dependency Walker` on Windows.
+    
+-  **Identify writable paths in binary references**:
+    
+    > Ex: If a service binary expects `C:\Program Files\Something\lib.dll`, and that folder is writable = hijack possibility.
+    
+
+---
+
+## 🧠 Optional Deeper Analysis (only if juicy):
+
+-  **Use `dnSpy`** (for .NET executables) to view source code easily.
+    
+-  **Use `PE-bear` or `pestudio`** for basic PE structure inspection.
+    
+-  **If extreme case (rare):**
+    
+    - IDA Free
+        
+    - Ghidra (only if desperate and a known path is blocked)
+        
+
+---
+
+## 🛠 Useful Tools:
+
+|Tool|Purpose|
+|---|---|
+|`strings`|Pulls human-readable text|
+|`exiftool`|Metadata analysis|
+|`PE-bear`|PE header inspection (Windows binaries)|
+|`pestudio`|Lightweight static analysis|
+|`dnSpy`|Decompile/view C#/VB.NET code|
+|`Dependency Walker`|DLL dependency checks|
+
+---
+
+## ⚡ Quick Mindset:
+
+- **Look for passwords first.**
+    
+- **Look for service account usernames or API endpoints.**
+    
+- **Look for writable folders in the binary’s path.**
+    
+- **Move on quickly if nothing interesting after 5-10 minutes.**
