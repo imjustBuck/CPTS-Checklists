@@ -1,0 +1,70 @@
+Windows Credential Hunting - Command One-Liners
+
+---
+
+### 🔥 App Config Files & Sensitive Strings
+- [ ] Run `findstr /si "password" *.xml *.ini *.txt *.config`
+- [ ] Run `dir /s /b *pass* *cred* *.config *.xml *.ini *.rdp`
+- [ ] Run `Get-ChildItem -Path C:\ -Include *.config,*.xml,*.ini,*.rdp -Recurse -ErrorAction SilentlyContinue`
+➡️ Look for `web.config`, `appsettings.json`, `.ini`, `.txt`, `.xml`
+
+### 🔥 PowerShell History
+- [ ] Run`gc (Get-PSReadLineOption).HistorySavePath` 
+- [ ] Run `foreach($user in (ls C:\Users).FullName){cat "$user\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt" -ErrorAction SilentlyContinue}`
+➡️ Look for creds passed in one-liners or mistakes (especially `-p` or `password` params)
+### 🔥 Unattended Install Files
+- [ ] Run `dir /s /b unattend.xml sysprep.xml autounattend.xml`
+- [ ] Run `findstr /si "password" unattend.xml sysprep.xml`
+➡️ Look for base64 or plaintext admin creds
+
+### 🔥 Dictionary Files (Chrome)
+- [ ] Run `type "C:\Users\*\AppData\Local\Google\Chrome\User Data\Default\Custom Dictionary.txt"`
+➡️ Look for saved passwords that users added to custom dictionary
+
+
+### 🔥 Sticky Notes Creds (SQLite)
+- [ ] Run `strings "C:\Users\*\AppData\Local\Packages\Microsoft.MicrosoftStickyNotes*\LocalState\plum.sqlite" | findstr /i "password\|pass\|cred"`
+➡️ Look for passwords typed into StickyNotes
+
+### 🔥 Registry AutoLogon Keys 
+- [ ] Run `reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"` 
+➡️ Look for `DefaultUserName` and `DefaultPassword`
+
+
+### 🔥 Saved Wifi Keys
+
+- [ ] Run `netsh wlan show profile`
+- [ ] Run `netsh wlan show profile "NetworkName" key=clear`
+➡️ Look for saved corporate Wi-Fi passwords (maybe a second pivot?)
+
+
+### 🔥 Saved RDP/WinSCP/Putty Sessions
+- [ ] Run `reg query HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions
+- [ ] Run `dir /s /b *.rdp *.ppk`
+➡️ Find saved RDP creds or private keys
+### 🔥 Cmdkey Saved Credentials 
+- [ ] Run `cmdkey /list` 
+➡️ Look for saved logins to other machines
+
+### 🔥 Run LaZagne
+- [ ] Run `.\laZagne.exe all` 
+➡️ Steal browser creds, Wi-Fi keys, sysadmin tools, database passwords, memory-stored creds
+
+### 🔥 Search ProgramData + AppData
+
+- [ ] Run `dir /s /b C:\ProgramData\*password*`
+- [ ] Run `dir /s /b C:\Users\*\AppData\*password*` 
+➡️ Look inside sloppy dev ops
+
+## ⚡ Flow When You Find a Password
+
+|Find|Action|
+|---|---|
+|NTLM hash|Crack it immediately or spray with CME|
+|Password string|Try RDP, SMB, WinRM immediately|
+|SSH Key|Pivot SSH into other boxes|
+|Database creds|Try MySQL/MSSQL pivot and xp_cmdshell|
+|Browser creds|Pivot web apps, internal portals|
+|Wi-Fi key|Try new wireless pivot|
+|Sticky Notes/Notes|Decode plaintext secrets|
+|.kdbx (KeePass)|Hash dump → crack with hashcat|
