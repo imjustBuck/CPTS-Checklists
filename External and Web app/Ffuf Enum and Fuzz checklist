@@ -1,0 +1,160 @@
+🔎 **Directory and File Fuzzing**
+
+## RUN THIS FIRST TO FIND SUBDOMAINS 
+
+- [ ] Run `ffuf -u http://10.129.159.70/ -H "Host: FUZZ.tricolor.local" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -fs 4242`
+
+Example: `ffuf -u http://10.129.43.33/ -H "Host: FUZZ.inlanefreight.htb" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -fs 1234`
+
+
+-  **Standard directory discovery**:
+    
+    `ffuf -u http://trilocor.local/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -fs 4242`
+    
+-  **Fuzz extensions with static extension**:
+
+    `ffuf -u http://trilocor.local/FUZZ.php -w /usr/share/seclists/Discovery/Web-Content/common.txt -fs 4242`
+    
+-  **Fuzz extensions dynamically**:
+    
+    `ffuf -u http://trilocor.local/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -e .php,.bak,.zip,.tar,.gz,.conf,.txt,.xml -fs 4242`
+    
+
+---
+
+## 🔍 **VHost / Subdomain Fuzzing**
+
+-  **Host header fuzzing (Virtual Hosts)**:
+    
+    `ffuf -u http://<target>/ -H "Host: FUZZ.<target>" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -fs 4242`
+    
+
+---
+
+## 🔑 **Parameter Discovery**
+
+-  **GET parameter fuzzing**:
+    `ffuf -u http://blog.trilocor.local/page.php?FUZZ=test -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -fs 4242`
+    
+-  **POST parameter fuzzing**:
+
+    `ffuf -X POST -d "FUZZ=test" -u http://<target>/submit.php -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -fs 4242`
+    
+-  **Hidden parameter value discovery** (important for auth bypass):
+    
+    `ffuf -X POST -d "role=FUZZ" -u http://<target>/admin.php -w /usr/share/seclists/Discovery/Web-Content/raft-small-words.txt -fs 4242`
+    
+
+---
+
+## 🧪 **Specific Attack Patterns**
+
+-  **Fuzz for upload bypasses** (testing extensions):
+    
+    `ffuf -u http://<target>/upload.php -w /usr/share/seclists/Discovery/Web-Content/extensions_common.txt -X POST -d "file=@FUZZ" -fs 4242`
+    
+-  **Login Bypass (Auth Testing)**:
+    
+    - Username field fuzz:
+        
+        `ffuf -X POST -d "username=FUZZ&password=password" -u http://<target>/login.php -w /usr/share/seclists/Usernames/top-usernames-shortlist.txt -fs 4242`
+        
+    - Password field fuzz:
+
+        `ffuf -X POST -d "username=admin&password=FUZZ" -u http://<target>/login.php -w /usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt -fs 4242`
+        
+
+---
+
+## 🎯 **Pro-Tips Checklist**
+
+-  Use `-fc` (filter codes) and `-fs` (filter size) to reduce noise during fuzz.
+    
+-  Watch for **different length** or **different status codes** (e.g., 401, 403, 302).
+    
+-  Always screenshot interesting hits in Burp or terminal.
+    
+-  Investigate `403 Forbidden` hits: might indicate hidden but protected directories worth verb tampering.
+    
+-  Use `-recursion` mode sparingly: great for deep web trees but **slow** under time crunch.
+    
+
+---
+
+# 🧠 CPTS Mindset:
+
+- FFUF is about **mapping opportunity space**, **not blindly smashing everything**.
+    
+- Always follow up hits with **manual browser review** and **Burp Proxy inspection**.
+    
+- Save **output to file** if running big fuzzer runs:
+    
+    `ffuf ... -o results.json -of json`
+
+# 🛠️ Per-Subdomain Web Attack Checklist (after discovery)
+
+---
+
+## 1. **Document Basic Details**
+
+-  Screenshot homepage + login portals (if any)
+    
+-  Note server headers / tech stack (use Burp or whatweb)
+    
+-  Wappalyzer/whatweb basic fingerprinting
+    
+-  HTTP methods allowed (OPTIONS request)
+    
+
+## 2. **Initial Manual Browsing**
+
+-  Explore the site manually.
+    
+-  Look for parameters in URLs.
+    
+-  Check robots.txt, sitemap.xml, changelogs, backups.
+    
+
+## 3. **Run Directory/Extension Fuzz**
+
+-  Run ffuf for common directories:
+    
+    `ffuf -u http://<subdomain>/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -fs 4242`
+    
+-  Run ffuf for extensions:
+    
+    `ffuf -u http://<subdomain>/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -e .php,.html,.bak,.txt -fs 4242`
+    
+-  Note any `/upload/`, `/api/`, `/admin/`, `/backup/` folders.
+    
+
+## 4. **Parameter and Auth Flow Fuzzing**
+
+-  Fuzz GET parameters:
+
+    
+    `ffuf -u http://<subdomain>/page.php?FUZZ=test -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -fs 4242`
+    
+-  Fuzz POST parameters if forms exist.
+    
+-  Intercept login flows, check cookies/session logic.
+    
+
+## 5. **Header Analysis**
+
+-  Review:
+    
+    - CORS misconfigs (`Access-Control-Allow-Origin`)
+        
+    - Cookies: Secure? HttpOnly?
+        
+    - Redirect behavior (302 chains)
+        
+
+## 6. **Vulnerability Hunting**
+
+-  File Upload tests if applicable (RCE/Path Traversal).
+    
+-  SQLi / XSS manual payloads if any inputs are found.
+    
+-  Test IDORs if user data is referenced (e.g., `/profile?id=1`).
