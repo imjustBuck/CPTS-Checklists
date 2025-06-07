@@ -1,0 +1,54 @@
+🗂️ Suspicious Directories
+
+#### General Admin/Debug/Test
+- [ ] `/admin` → Try default creds, auth bypass, hidden panels
+- [ ] `/login`, `/auth`, `/signin`, `/users` → Brute force, auth logic bugs
+- [ ] `/test`, `/testing` → Dev test pages, verbose errors
+- [ ] `/dev`, `/development` → Insecure logic, staging configs
+- [ ] `/debug` → Stack traces, logs, full paths
+- [ ] `/old`, `/bak`, `/backup`, `/archive` → Forgotten backups, often unprotected
+- [ ] `/include`, `/src`, `/lib`, `/api` → Core logic exposed, RCE or LFI risks
+- [ ] `/private`, `/hidden`, `/internal`, `/core` → Sensitive or restricted assets
+
+#### Blind Behavior Indicators
+- [ ] `/blind/`, `/oob/`, `/nooutput/`, `/async/` → Blind XXE, blind command injection, blind SQLi
+- [ ] `/submit`, `/report`, `/upload` → Usually POST endpoints, great for injection
+
+#### Log or File Dumps
+- [ ] `/logs`, `/log/`, `/error_log` → Info leakage, path disclosure
+- [ ] `/tmp`, `/data`, `/files`, `/uploads` → File upload abuse, path traversal, RCE
+
+---
+
+### 📄 File Extension Mapping
+
+#### Web App Logic
+- [ ] `.php` → Full backend access, test for LFI/RFI, RCE
+- [ ] `.asp`, `.aspx` → MS stack, test for command injection, ViewState
+- [ ] `.jsp`, `.jspx` → Java, often exposes stack traces
+- [ ] `.cgi` → Legacy scripts, command injection heaven
+- [ ] `.pl` → Perl, rare but often insecure
+- [ ] `.rb` → Ruby, sometimes Rails with deserialization issues
+
+#### Leak Risk
+- [ ] `.bak`, `.old`, `.swp`, `.save` → Forgotten backup files
+- [ ] `.log`, `.txt` → Misconfigured logs, session leakage, debugging output
+- [ ] `.zip`, `.tar`, `.gz` → Downloadable source/binary/configs
+- [ ] `.sql` → DB dumps = credentials
+- [ ] `.xml` → XXE target
+- [ ] `.json` → API endpoints, enumerate keys or test for IDOR
+
+#### App Source & Config
+- [ ] `.env`, `.config`, `.ini`, `.yml`, `.conf` → Secrets, DB creds, tokens
+- [ ] `.htpasswd`, `.htaccess` → Auth hints, path restrictions
+- [ ] `.pem`, `.crt`, `.key` → TLS/SSH creds if misexposed
+
+---
+
+### 🔁 Strategy Flags (Mental Prompts)
+
+- [ ] If XML-based response + `/blind/` or no output → try **Blind XXE with OOB**
+- [ ] If `.json` + `/api/` → check for **IDOR** or **Token substitution**
+- [ ] If `.php.bak` or `.zip` → try downloading for **source code review**
+- [ ] If `Content-Disposition: attachment` from a `.php` or `.jsp` → might be leaking server-side files
+- [ ] If `.log` or `debug=true` → search for **stack traces**, **full file paths**, or **server env leaks**
