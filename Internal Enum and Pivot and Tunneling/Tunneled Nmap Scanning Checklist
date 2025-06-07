@@ -1,0 +1,121 @@
+🛰️ **If Using Ligolo-NG Tunnel**
+
+✅ **Before Scanning:**
+
+-  Confirm Ligolo proxy is up (`sudo ./ligolo-proxy -laddr 0.0.0.0:11601 -selfcert -v`)
+    
+-  Confirm Ligolo agent is running and connected (agent side `./ligolo-agent -connect PROXYIP:11601`)
+    
+-  Confirm SOCKS proxy is listening (default `127.0.0.1:1080`)
+    
+-  **Edit `/etc/proxychains.conf`**:
+    
+    -  Comment out old entries.
+        
+    -  Set only: `socks5 127.0.0.1 1080`
+        
+-  Test quick command through proxychains (e.g., `proxychains curl http://<internal_ip>`) to confirm it's routing properly.
+    
+
+✅ **For Scanning:**
+
+-  Use **proxychains + Nmap** with TCP Connect (`-sT`) only:
+    
+    `proxychains nmap -sT -Pn -n -T4 -p 445,3389,5985,22,80,443 <target_ip>`
+    
+    > _Use `-Pn` because ICMP (ping) usually won't work across tunnel._
+    
+
+✅ **If slow (~20+ mins) but progressing:**
+
+-  WAIT. (Don't cancel unless truly frozen.)
+    
+-  Open another tab, pillage elsewhere while waiting.
+    
+
+✅ **If scan hangs (no movement 10+ min):**
+
+-  CTRL+C.
+    
+-  Try single-port scans one by one:
+    
+    `proxychains nmap -sT -Pn -p 445 <target_ip>`
+    
+
+✅ **After finding open ports:**
+
+-  Move exploitation manually (evil-winrm, smbclient, xfreerdp, etc.) through proxy.
+    
+
+---
+
+## 🔒 **If Using Old School `ssh -D` with Proxychains**
+
+✅ **Before Scanning:**
+
+-  Connect SSH tunnel for SOCKS proxy:
+    `ssh -D 9050 user@jumpbox_ip`
+    
+-  **Edit `/etc/proxychains.conf`**:
+    
+    -  Comment old entries.
+        
+    -  Add only: `socks5 127.0.0.1 9050`
+        
+-  Test tunnel routing:
+    
+    `proxychains curl http://<internal_ip>`
+    
+
+✅ **For Scanning:**
+
+-  Same as Ligolo, but slightly slower expected:
+    
+    `proxychains nmap -sT -Pn -n -T4 -p 445,3389,5985,22,80,443 <target_ip>`
+    
+
+✅ **Tunnel Stability Tips:**
+
+-  If SSH drops, restart immediately.
+    
+-  Always verify the proxy is active before scanning again.
+    
+
+✅ **Timeout Strategy:**
+
+-  Same as Ligolo — _if targeted scan takes 20–30 min but moving, wait it out._
+    
+-  If nothing moves after 10+ min, restart with single ports.
+    
+
+---
+
+# 🔥 **One-Liner Cheatsheets to Save in Obsidian**
+
+|Tunnel Method|Quick Nmap Command|
+|---|---|
+|Ligolo-NG|`proxychains nmap -sT -Pn -n -T4 -p 445,3389,5985,22,80,443 <target>`|
+|SSH -D 9050|`proxychains nmap -sT -Pn -n -T4 -p 445,3389,5985,22,80,443 <target>`|
+
+(_same logic, just different SOCKS proxy setup!_)
+
+---
+
+# 🧠 **Pro Tips for Both Tunnels**
+
+- **Always use `-sT -Pn`.** (No stealth SYN scans.)
+    
+- **Tighten ports list** to the absolute critical ones.
+    
+- **-T4 is fine.** (No need to slow to -T3 unless major instability.)
+    
+- **If desperate for speed:** split targets into small IP chunks manually.
+    
+- **Parallelize activity while waiting.** (e.g., crack SMB creds, prepare BloodHound import, etc.)
+    
+
+---
+
+# ✅ Mini-Mindset Summary:
+
+> _Tunnel slow? Focus on progress, not perfection. Scanning even a little is better than cancelling and starting over._
