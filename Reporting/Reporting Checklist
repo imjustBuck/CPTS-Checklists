@@ -1,0 +1,14 @@
+- [ ] Document exact IP, hostname, OS type/version
+- [ ] Capture and store full Nmap results
+- [ ] Include all tools used (FFUF, Nikto, Hydra, etc.) and exact command syntax
+- [ ] Capture screenshots of each exploit (Burp, shell, login, flags)
+- [ ] Note every flag path, value, and how it was obtained
+- [ ] Explain the vulnerability exploited (type, root cause, risk)
+- [ ] Write a brief impact summary for each vuln
+- [ ] List failed attempts or blind alleys (for lessons learned)
+- [ ] Describe lateral movement, tunneling, or pivot steps used
+- [ ] Include hash dumps, cracked passwords, reused creds
+- [ ] Add BloodHound or AD abuse diagrams/screens if applicable
+- [ ] Timestamp each major action (optional for timeline generation)
+- [ ] Save session logs (tmux logs, asciinema, Burp exports)
+- [ ] Organize everything in a per-box structure in Obsidian
