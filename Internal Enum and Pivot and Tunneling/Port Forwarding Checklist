@@ -1,0 +1,21 @@
+ [ ] Identify if pivoting is needed (isolated network, RDP only internally, SQL access, etc.)
+- [ ] Confirm internal host/subnet needing access
+- [ ] Start Ligolo-ng proxy (agent and listener properly running)
+- [ ] Test connectivity from attack box through proxy (proxychains nmap / proxychains crackmapexec)
+- [ ] Set up SSH local port forwarding (`ssh -L local_port:target_ip:target_port user@pivot_host`)
+- [ ] Set up SSH dynamic SOCKS proxy (`ssh -D 9050 user@pivot_host`) if needed
+- [ ] Confirm proxychains config is correct (`socks5 127.0.0.1 9050`)
+- [ ] Confirm remote port is reachable (use netcat or nmap on local listener)
+- [ ] Capture port forwarding command and syntax used for report
+- [ ] Kill tunnels after job done to clean environment
+
+🛰️ Alternative Setup (Ligolo-ng Fallback)
+- [ ] Deploy Ligolo-ng agent on pivot host (Linux or Windows)
+- [ ] Start Ligolo-ng listener ( `sudo ./ligolo-proxy -laddr 0.0.0.0:11601 -selfcert -v` )
+- [ ] Connect agent to listener from pivot
+- [ ] Validate pivot works with:
+- [ ] `proxychains curl http://<internal_target>`
+- [ ] `proxychains nmap <internal_target>`
+- [ ] Update proxychains config if needed ( `socks5 127.0.0.1 1080` for Ligolo)
+- [ ] Capture Ligolo command setup for report
+- [ ] Kill Ligolo proxy and agent once job complete
