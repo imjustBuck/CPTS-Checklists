@@ -1,0 +1,10 @@
+- [ ] Ensure all flags are copied out and stored (with Host, Service, User context)
+- [ ] Confirm screenshots are captured for each flag (especially tricky exploits)
+- [ ] Dump critical tool outputs (BloodHound, SharpHound, LinPEAS, CrackMapExec scans, etc.)
+- [ ] Export credential dumps (hashes, plaintext creds, screenshots of creds)
+- [ ] Stop any running listeners (netcat, Socat, Ligolo proxies, Meterpreter sessions)
+- [ ] Remove any local temp files (loot from shares, dumped hashes, shell scripts)
+- [ ] Clean up tmux logs — organize by host/subdomain (move into dedicated folder)
+- [ ] Snapshot all working directories with notes (zip if needed for archive)
+- [ ] Crosscheck node and reporting notes to confirm no missing flags
+- [ ] Final reattach to each tmux session and manually check for anything missed
