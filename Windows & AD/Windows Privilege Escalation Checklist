@@ -1,0 +1,92 @@
+📋 Basic Enumeration
+
+- [ ] `whoami /all` — check user, groups, SeImpersonate
+- [ ] `systeminfo` — OS version, hotfixes
+- [ ] `hostname && echo %USERNAME%`
+- [ ] `net users` and `net localgroup administrators`
+
+## 🛠️ Enumeration Tools
+
+- [ ] Upload/run `winPEASx64.exe`
+- [ ] Upload/run `Seatbelt.exe`
+- [ ] `accesschk64.exe -uwcqv "Authenticated Users" *` — perms scan
+
+## 📁 File and Folder Checks
+
+- [ ] `icacls C:\* /t /c` — look for `Everyone:F` or `BUILTIN\Users`
+- [ ] Check `C:\Program Files`, `C:\ProgramData`, `C:\Users\Public`
+
+## 🔍 Services
+
+- [ ] `sc query state= all` — list services
+- [ ] `sc qc <service>` — check if path is unquoted
+- [ ] Look for binPath with spaces and no quotes (`Unquoted Service Path`)
+- [ ] Run `Get-WmiObject win32_service | Where-Object { $_.PathName -match " " -and $_.PathName -notmatch '"' } | Select-Object Name, DisplayName, PathName`
+- [ ] `reg query HKLM\SYSTEM\CurrentControlSet\Services` — for misconfig
+🧠 What an _unquoted service path_ looks like: `binPath = C:\Program Files\My App\myappservice.exe` 
+🧨 An attacker could drop a `C:\Program.exe` file, reboot or restart service, and **boom** — SYSTEM shell.
+## 🔁 Scheduled Tasks
+
+- [ ] `schtasks /query /fo LIST /v` — verbose task list
+- [ ] Look for user-run tasks calling script/exe from writable location
+You might see an output like this:
+TaskName: \UserBackupTask
+Task To Run: C:\Users\Public\Backup\runme.ps1
+Run As User: Administrator
+
+✅ **Key things to look for:**
+
+- **Task To Run:**
+    
+    - Is the **directory** (`C:\Users\Public\Backup`) **writable** by us (non-admin)?
+        
+    - Is the **script/exe** (`runme.ps1`) in a place we can modify?
+        
+- **Run As User:**
+    
+    - It's running as a **privileged user** (like Administrator or SYSTEM).
+        
+
+🧨 **Exploit:**
+
+- Replace `runme.ps1` with **your own reverse shell script**.
+    
+- Wait for task to trigger → 🐚 SYSTEM shell.
+
+## 🔥 SeImpersonate / SeAssignPrimaryToken
+
+- [ ] Check `whoami /priv`
+- [ ] If present:
+  - [ ] Use **PrintSpoofer**
+  - [ ] Use **Juicy Potato / RoguePotato** (depending on OS version)
+  - [ ] Use **Potato Suite** (if modern environment)
+
+## 🔑 Credential Hunting
+
+- [ ] `dir C:\Users\*\AppData\Roaming\Microsoft\Credentials`
+- [ ] `findstr /si password *.xml *.ini *.txt`
+- [ ] Use `mimikatz` if SYSTEM access is already gained
+- [ ] Dump `SAM`, `SYSTEM`, `SECURITY` hives if `reg save` is allowed
+
+## 🧪 Exploitable Software
+
+- [ ] Use `winPEAS` or manual check in `Add/Remove Programs`
+- [ ] **Look through `C:\Program Files`, `C:\Program Files (x86)`, `C:\ProgramData` manually in Explorer**
+- [ ] Look for abandoned, outdated, or vulnerable software installs
+- [ ] Look for vulnerable versions of:
+  - MySQL
+  - Apache
+  - FileZilla
+  - WinSCP
+
+## 💣 Kernel/Exotic Exploits
+
+- [ ] Check `systeminfo` for vulnerable OS build
+- [ ] Run `windows-exploit-suggester.py`
+- [ ] Cross-check against known CVEs (e.g., MS16-032, MS10-015)
+
+## ✅ Confirm Escalation
+
+- [ ] `whoami` = `NT AUTHORITY\SYSTEM`
+- [ ] Flag path: `C:\Users\Administrator\Desktop\root.txt`
+- [ ] Screenshot and document the privesc path
