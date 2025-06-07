@@ -1,0 +1,116 @@
+🔎 File System Loot
+
+- [ ]  `C:\Users\<user>\AppData\Roaming\` – Search for saved creds, config files, session tokens
+- [ ] `C:\ProgramData\` – Look for unattended install files, temp configs, stored passwords\
+- [ ] `C:\inetpub\wwwroot\` – Web config files, creds in `.config`, `.xml`
+- [ ] Look for `mRemoteNG`, `WinSCP`, `FileZilla` configs (search for `.xml` and `.ini` files)
+- [ ] Look for KeePass files (`*.kdbx`) and configs (`KeePass.config.xml`)\
+- [ ] Search for `.rdp` and `default.rdp` files (cached RDP creds)
+    
+
+---
+
+## 🗝️ Credential Hunting
+
+- [ ]  Run `cmdkey /list` — look for stored RDP or SMB creds
+- [ ] Search all drives:
+- [ ] `findstr /spin "password" *.*`
+- [ ] `Get-ChildItem C:\ -Recurse -Include *pass*,*.config,*.cred*`
+- [ ] Check StickyNotes DB:
+- [ ] `C:\Users\<user>\AppData\Local\Packages\Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe\LocalState\plum.sqlite`
+- [ ] Check `.bash_history`, `.zsh_history`, `.ps1` files for hardcoded creds
+- [ ] Run `LaZagne.exe all` to loot stored app/browser/database creds
+- [ ] Check Chrome credentials via SharpChrome (if access to user session)
+    
+
+---
+
+## 🗄️ Registry Loot
+
+- [ ]   `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon` — Check AutoAdminLogon creds
+- [ ] `HKEY_CURRENT_USER\Software\SimonTatham\PuTTY\Sessions\` — Look for ProxyUsername / ProxyPassword
+- [ ] Use `reg query` manually to hunt autoruns, services, saved secrets
+    
+
+---
+
+## 🕵️‍♂️ System/Service Recon
+
+- [ ]  List installed software for vuln checks:
+- [ ] `wmic product get name,version`
+- [ ] `Get-WmiObject Win32_Product | Select-Object Name, Version`
+- [ ] Check Program Files and Program Files (x86) manually
+- [ ] List running services:
+- [ ] `sc query`
+- [ ] `Get-Service`
+- [ ] Dump scheduled tasks:
+- [ ] `schtasks /query /fo LIST /v`
+- [ ] Look for user-created services with weak perms (printspoofer, juicypotato setups)
+- [ ] Dump active network connections:
+- [ ] `netstat -ano`
+- [ ] Look for open SMB/NFS mounts
+
+## SMB Shares Mapping:
+
+ **List mapped network drives**:
+- [ ] Run`net use`
+- **List open shares on the local machine**:
+- [ ] Run `net share`
+    
+- **Enumerate remote shares manually if you know a server name**:
+- [ ] Run `net view \\TARGET-IP`
+    
+- **More aggressive using PowerShell**:
+- [ ] Run `Get-SmbShare`
+    
+- **Enumerate available SMB sessions (if admin rights)**:
+- [ ] Run`Get-SmbSession`
+
+---
+
+## 🧹 Filesystem Bounty Hunt
+
+- [ ]   Hunt `.git`, `.svn`, `.vscode`, `.kube`, `.bak`, `.old`, `.backup` folders
+- [ ] Check mounted shares:
+- [ ] `net use`
+- [ ] Check mapped drives:
+- [ ] `Get-PSDrive`
+- [ ] Mount accessible shares (impacket-smbserver / mount / net use)
+    
+
+---
+
+## 🧰 Pillaging Tools to Deploy (If Needed)
+
+- [ ]  Seatbelt.exe — Full recon of tokens, groups, autoruns
+- [ ] WinPEASx64.exe — Vuln scanning, credentials, path issues
+- [ ] SessionGopher.ps1 — Dump saved sessions
+- [ ] LaZagne.exe — Mass credential scraping
+- [ ] SharpChrome.exe — Browser credential extraction
+- [ ] BloodHound Ingestor (SharpHound.exe) — Mapping domain attack paths
+- [ ] Snaffler.exe — Hunt for juicy files in large shares
+    
+
+---
+
+# 🧠 Pillaging Mental Model:
+
+> "Look for creds first.  
+> If no creds, look for config files.  
+> If no configs, look for writable services.  
+> If no services, loot memory.  
+> If nothing juicy, pivot deeper."
+
+---
+
+# 🔥 Bonus: Fast Manual Grep Commands (No Tool Needed)
+
+|Goal|Command|
+|---|---|
+|Search for "password" in all files|`findstr /spin "password" *.*`|
+|Search common sensitive file types|`dir /s /b *pass* *cred* *.config *.ini *.xml`|
+|Check for scheduled tasks|`schtasks /query /fo LIST /v`|
+|Check autologon creds|`reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"`|
+|List SMB shares|`net share` or `net use`|
+|Dump all users|`net user`|
+|Look for sticky notes|`dir /s plum.sqlite`|
