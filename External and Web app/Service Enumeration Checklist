@@ -1,0 +1,144 @@
+General Service Checks (All hosts)
+
+ - [ ] `nmap -sV -sC -p- TARGET` — Full port scan + default scripts
+    
+- [ ] nmap -sU -top-ports 100 -T4 TARGET` — UDP top 100 ports
+    
+- [ ] Save `nmap` output to a file for later grep / grep -B3 use
+    
+
+---
+
+### 📁 SMB (Ports 139, 445)
+
+#### 🧱 Without Credentials
+
+- [ ] smbclient -L \\TARGET -N` — Null session share list
+    
+- [ ] `enum4linux-ng -A TARGET` — Fast recon, see if guest is allowed
+    
+- [ ]  `smbmap -H TARGET` — Anonymous access to shares
+    
+- [ ] `crackmapexec smb TARGET -u '' -p ''` — Confirm null access
+    
+
+#### 🧑‍💻 With Credentials
+
+- [ ] `smbclient //TARGET/SHARE -U user%pass` — Browse and download
+    
+- [ ] crackmapexec smb TARGET -u USER -p PASS --shares`
+    
+- [ ] `smbmap -H TARGET -u USER -p PASS`
+    
+- [ ] Look for:
+    
+    - [ ] `web.config`, `.env`, `.xml`, `.ps1`, `.bak`, `.zip`, `.rdp`, `win.ini`
+        
+    - [ ]  `flag.txt`, `note.txt`, `passwords.txt`
+        
+- [ ] Mountable shares or backups
+        
+
+---
+
+### 🔐 LDAP (Port 389, 636)
+
+#### 🧱 Without Credentials
+
+- [ ] `ldapsearch -x -H ldap://TARGET -b "DC=domain,DC=local"`
+    
+- [ ] `nmap --script=ldap* -p 389 TARGET` — LDAP NSE scripts
+    
+
+#### 🧑‍💻 With Credentials
+
+- [ ] ldapsearch -x -H ldap://TARGET -D "user@domain.local" -w pass -b "DC=domain,DC=local"`
+    
+- [ ]  Look for:
+    
+    - [ ] `sAMAccountName`, `mail`, `description`, `servicePrincipalName`
+        
+    - [ ] Weak passwords in `description`
+        
+    - [ ] Get user list for AS-REP roasting or Kerberoasting
+        
+
+---
+
+### 📡 NFS (Port 2049)
+
+- [ ] showmount -e TARGET` — List exports
+    
+- [ ] Mount exports: `mount -t nfs TARGET:/share /mnt/tmp`
+    
+- [ ] Search for creds or flags inside export
+    
+- [ ] Check permissions: RW vs RO
+    
+
+---
+
+### 🧠 SNMP (Port 161)
+
+- [ ]  `snmpwalk -v2c -c public TARGET`
+    
+    - [ ] Look for system names, usernames, network interfaces
+    
+- [ ] `onesixtyone -c community.txt TARGET` — Community string brute-force
+    
+- [ ] Possible creds in sysContact or process list
+    
+
+---
+
+### ✉️ SMTP (Port 25)
+
+- [ ] nc TARGET 25` then try `VRFY`, `EXPN`, `HELP`
+    
+- [ ] `nmap --script smtp-enum-users -p25 TARGET`
+    
+- [ ] Look for usernames, possible open relay, banner info leaks
+    
+
+---
+
+### 🖥️ FTP (Port 21)
+
+- [ ] ftp TARGET` — Test for anonymous login
+    
+- [ ] `nmap --script ftp* -p21 TARGET`
+    
+- [ ] Look for writable dirs, .txt creds, uploadable shells
+    
+
+---
+
+### 🌐 HTTP/HTTPS
+
+- [ ] Run `whatweb`, `nikto`, `ffuf`, `wappalyzer`, `curl -I`
+    
+- [ ] Check robots.txt, sitemap.xml
+    
+- [ ] View page source, JS files for creds
+    
+- [ ] FFUF for common endpoints
+    
+- [ ] Dir brute on HTTP and HTTPS if both exist
+    
+
+---
+
+### 🔑 RDP/SSH/WinRM
+
+#### Without creds
+
+-  Check port is open
+    
+-  Enumerate banners
+    
+
+#### With creds
+
+-  `xfreerdp /u:USER /p:PASS /v:TARGET`
+    
+-  `evil-winrm -u USER -p PASS -i TARGET`
