@@ -1,0 +1,150 @@
+## 🔎 Initial Checks
+
+- [ ] `whoami && id` — confirm user/group
+- [ ] `hostname && uname -a` — identify host and kernel
+- [ ] `sudo -l` — check for sudo privileges
+- [ ] `df -h` — check mounted drives
+- [ ] `ps aux` — running processes
+- [ ] `env` — any sensitive environment vars
+- [ ] `history` — reused commands
+
+## 🔍 Enumeration Tools
+
+- [ ] Upload/run `linpeas.sh`
+- [ ] Upload/run `linux-exploit-suggester.sh`
+- [ ] Manual search through `/opt/`, `/home/*`, `/tmp`, `/var`
+
+## 🛠️ SUID / Capabilities
+
+- [ ] `find / -perm -4000 -type f 2>/dev/null` — list SUID binaries
+- [ ] `getcap -r / 2>/dev/null` — search for capabilities set
+- [ ] Check `/usr/bin/python`, `vim`, `less`, `nmap`, etc.
+
+## 🔐 Weak File Permissions
+
+- [ ] `ls -la /etc/shadow` — readable?
+- [ ] `find / -writable 2>/dev/null` — writable dirs/files
+- [ ] `find / -name '*.py' -type f -writable 2>/dev/null` — editable scripts
+
+## 📜 Cron Jobs
+
+- [ ] `ls -la /etc/cron*`
+- [ ] `crontab -l` and `cat /etc/crontab`
+- [ ] Look for scripts run by root that are world-writable
+
+## 🧵 Kernel / Exploits
+
+- [ ] `uname -r` and `cat /etc/os-release`
+- [ ] Use `linux-exploit-suggester.sh` for matching CVEs
+- [ ] Check for DirtyPipe, DirtyCow, overlayfs, etc.
+
+## 💣 Misc/Bonus
+
+- [ ] `grep -r password /etc/ /opt/ /home/* 2>/dev/null` — plaintext creds
+- [ ] Check bash aliases: `cat ~/.bashrc`, `.bash_profile`
+- [ ] Look for backup or old files: `.bak`, `.old`, `.zip`, `.tar`
+- [ ] SSH keys in `/root/.ssh/` or `/home/*/.ssh/`
+- [ ] Check /etc/systemd/system/*.service files for writable service paths
+
+
+## ✅ Confirm Escalation
+
+- [ ] `whoami` = `root`
+- [ ] Grab flag (e.g., `/root/root.txt`)
+- [ ] Screenshot and note the method
+
+
+
+# ✅ Linux Privilege Escalation (Advanced Techniques) 
+
+### 📂 PATH Abuse (Writable Directory Hijack)
+
+- [ ] `echo $PATH` — Look for any custom or suspicious paths (`/home/user/bin`, etc.)
+- [ ] `ls -la /path/` — Check if any directory inside PATH is **writable**.
+- [ ] If writable: Craft a malicious binary (like `cat`, `cp`, or custom) and wait for cron/script execution.
+
+✅ _Pro Tip_: Abuse misconfigured scripts that run with elevated privileges but call unquoted binaries!
+
+---
+
+### 🧬 Kernel Exploits (Old Kernel Abuse)
+
+- [ ]  `uname -a` — Check for old vulnerable kernels.
+- [ ] Searchsploit: `searchsploit linux kernel [version]`
+- [ ] If vulnerable: Download exploit, compile on your box, transfer payload, run carefully.
+
+✅ _Pro Tip_: ONLY kernel exploit if it’s cleanly vulnerable and no easier path exists!
+
+---
+
+### 🐍 Python Library Hijacking
+
+- [ ]  Look for scripts run with `sudo`, `cron`, or services → `pspy` / manual cron checks.
+- [ ] Check imports: `grep "import" script.py`
+- [ ] If libraries like `os`, `sys`, etc. are imported:
+- [ ] Check if any local folder is writable.
+- [ ] Inject malicious module (same name) to hijack execution.
+
+✅ _Pro Tip_: Drop malicious `os.py` or `requests.py` if script loads modules insecurely!
+
+---
+
+### 📜 Logrotate / Config Misuse
+
+- [ ]   Look for logrotate configs: `/etc/logrotate.d/`
+- [ ] Check if any script or file run in post-rotate is writable.
+- [ ] If writable: Replace with reverse shell command.
+- [ ] Force rotation manually or wait for scheduled rotation.
+
+✅ _Pro Tip_: Common in sloppy enterprise builds — rare but deadly if found!
+
+---
+
+### 🛠️ Living Off The Land (GTFOBins)
+
+- [ ] Check for SUID binaries or `sudo -l` with usable apps.
+- [ ] Try `GTFOBins`: https://gtfobins.github.io/
+- [ ] Common bin targets: `vim`, `less`, `nano`, `cp`, `tar`, `awk`, `find`
+✅ _Pro Tip_: Even without SUID, `sudo -l` + GTFOBin = quick root!
+
+---
+
+### 🗄️ NFS no_root_squash
+
+- [ ]  Look for NFS mounts: `cat /etc/fstab`, `mount -l`
+- [ ] Check exports: `/etc/exports`
+- [ ] If `no_root_squash` is set:
+- [ ] Mount share on your box as root.
+- [ ] Drop malicious files (e.g., `authorized_keys`) to escalate.
+
+✅ _Pro Tip_: NFS = root anywhere if misconfigured!
+
+---
+
+### 🧩 Writable Shared Objects (.so Hijack)
+
+- [ ] Check for writable `.so` files used by services.
+- [ ] Inject malicious code inside shared objects.
+- [ ] Restart service or trigger dependency load.
+
+✅ _Pro Tip_: Rare but you might catch old custom apps or lazy admin setups.
+
+---
+
+### 📟 Tmux Hijack
+
+- [ ] `ls /tmp/` — Look for `.tmux-*` folders.
+- [ ] `tmux ls` — Check if a session is running.
+- [ ] `tmux attach -t [session]` — Attach if allowed.
+
+✅ _Pro Tip_: If an admin forgot to lock tmux sessions, you become them.
+
+---
+
+### 🖥️ Screen Escalation
+
+- [ ]  `ls /var/run/screen/S-username/` — Check for screen sockets.
+- [ ] `screen -r` — Attach to an open screen session.
+- [ ] If privileged user is inside → instant escalation.
+
+✅ _Pro Tip_: Screen sessions often leak when admins are lazy with detach locks.
